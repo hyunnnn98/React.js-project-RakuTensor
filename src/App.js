@@ -1,9 +1,13 @@
 // modules
 import React, { useState, useEffect, createRef } from 'react'
+import ReactLoading from 'react-loading';
 import axios from 'axios'
 
+// components
+// import ResultChart from './components/ResultChart'
+
 // const
-import { SERVER_URL, IMAGE_COUNT, FIRST_OBJ, SECOND_OBJ } from './const'
+import { SERVER_URL, IMAGE_COUNT, FIRST_OBJ, SECOND_OBJ } from './utils/const'
 
 // urils
 import converImgSrc from './utils/convertImgSrc'
@@ -12,6 +16,9 @@ import converImgSrc from './utils/convertImgSrc'
 import './App.css';
 
 const App = () => {
+  // 로딩 컨트롤
+  const [isLoading, setIsLoading] = useState(false)
+
   // 서버로부터 객체 리스트 저장
   const [objList, setObjList] = useState([])
 
@@ -36,6 +43,17 @@ const App = () => {
     } catch (e) {
       console.error(e);
     }
+
+    try {
+      const { data } = await axios.post(SERVER_URL + '/tensor/api/train', {
+        'objects':['tomato', 'dog', 'cat'],
+        'count': 1
+      });
+      console.log(data);
+      setObjList(data.list)
+    } catch (e) {
+      console.error(e);
+    }
   }, [])
 
   useEffect(() => {
@@ -49,14 +67,14 @@ const App = () => {
   }, [firstObj, secondObj])
 
   useEffect(() => {
-    if(count > 1) {
+    if (count > 1 && !isLoading) {
       console.log("이미지 리로딩!")
       // 이미지 리로딩
       handleRefreshImage('first', firstObj)
       handleRefreshImage('second', secondObj)
     }
 
-  }, [count])
+  }, [count, isLoading])
 
   const handleSave = () => {
     if (count < 2) {
@@ -74,6 +92,12 @@ const App = () => {
     if (count > 85) {
       return alert('객체 인식 실험은 최대 85번까지 가능합니다.')
     }
+
+    setIsLoading(true)
+
+    setTimeout(() => {
+      setIsLoading(false)
+    }, 500);
 
     // 카운트 증가
     setCount(prevCount => ++prevCount)
@@ -121,97 +145,104 @@ const App = () => {
   }
 
   return (
-    <div className="body-container">
-      <div className="main-title">Raku Tensor</div>
-      <div className="select-container">
-        <div className="select-left-container">
-          <div className="select-box">
-            <div>첫번째 객체를 선택해주세요</div>
-            <select
-              defaultValue="default"
-              value={firstObj}
-              onChange={(e) => handleChange(e, FIRST_OBJ)}
-              ref={selectFirstRef}
-              name="object"
-            >
-              <option value="default" disabled>객체선택</option>
+    <>
+      {
+        isLoading ?
+          <div className="loading-container">
+            <ReactLoading type='spinningBubbles' height={100} width={100}>
+            </ReactLoading>
+            <div className="loading-text">로딩중...</div>
+          </div> : null
+      }
+      <div style={{ height: 20 }} />
+      <div className="body-container">
+        <div className="main-title">Raku Tensor</div>
+        <div className="select-container">
+          <div className="select-left-container">
+            <div className="select-box">
+              <div>첫번째 객체를 선택해주세요</div>
+              <select
+                defaultValue="default"
+                value={firstObj}
+                onChange={(e) => handleChange(e, FIRST_OBJ)}
+                ref={selectFirstRef}
+                name="object"
+              >
+                <option value="default" disabled>객체선택</option>
+                {
+                  objList.map((item, index) => <option key={index} value={item}>{item}</option>)
+                }
+              </select>
+            </div>
+            <div className="select-box">
+              <div onClick={handleInit} className="btn-test-container color-blue">객체 초기화</div>
+            </div>
+          </div>
+          <div className="select-right-container">
+            <div className="image-container">
               {
-                objList.map((item, index) => <option key={index} value={item}>{item}</option>)
-              }
-            </select>
-          </div>
-          <div className="select-box">
-            <div onClick={handleInit} className="btn-test-container color-blue">객체 초기화</div>
-          </div>
-        </div>
-        <div className="select-right-container">
-          <div className="image-container">
-            {
-              firstObj !== null && firstObjImgs.map((image, index) =>
-                (index >= IMAGE_COUNT * (count - 1) && index <= IMAGE_COUNT * count) ?
-                  <div key={`${image}-${index}`} className="image-item">
-                  <img className="image-item-img" src={image} />
-                </div>
-                : null
-              )
-            }
-          </div>
-        </div>
-      </div>
-      <div className="result-container">
-        <div style={{ fontSize: 25, fontWeight: 900 }}>
-          <span className="obj-title">{firstObj}</span>
-           &
-           <span className="obj-title">{secondObj}</span>
-        </div>
-      </div>
-      <div className="select-container">
-        <div className="select-left-container">
-          <div className="select-box">
-            <div>두번째 객체를 선택해주세요</div>
-            <select
-              value={secondObj}
-              defaultValue="default"
-              onChange={(e) => handleChange(e, SECOND_OBJ)}
-              ref={selectSecondRef}
-              name="object"
-            >
-              <option value="default" disabled>객체선택</option>
-              {
-                objList.map((item, index) =>
-                  <option key={index} value={item}>{item}</option>
+                firstObj !== null && firstObjImgs.map((image, index) =>
+                  (index >= IMAGE_COUNT * (count - 1) && index <= IMAGE_COUNT * count) ?
+                    <div key={`${image}-${index}`} className="image-item">
+                      <img className="image-item-img" src={image} alt='' />
+                    </div>
+                    : null
                 )
               }
-            </select>
-          </div>
-          <div className="select-box">
-            <div onClick={() => handleTest()} className="btn-test-container">{count} 차 객체 인식 실험</div>
-            <div onClick={handleSave} className="btn-test-container color-dark">모델 저장</div>
+            </div>
           </div>
         </div>
-        <div className="select-right-container">
-          <div className="image-container">
-            {
-              secondObj !== null && secondObjImgs.map((image, index) =>
-                (index >= IMAGE_COUNT * (count - 1) && index <= IMAGE_COUNT * count) ?
-                  <div key={`${image}-${index}`} className="image-item">
-                    <img className="image-item-img" src={image} />
-                  </div>
-                  : null
-              )
-            }
+        <div className="result-container">
+          <div style={{ fontSize: 25, fontWeight: 900 }}>
+            <span className="obj-title">{firstObj}</span>
+            &
+            <span className="obj-title">{secondObj}</span>
           </div>
         </div>
-      </div>
-      <div className="result-container">
-        {/* <div id="chartContainer" style="height: 370px; width: 50%;"></div> */}
-        {/* <div className="result-items">{count}차 결과 ...</div>
-        <div className="result-items">{count}차 결과 ...</div>
-        <div className="result-items">{count}차 결과 ...</div>
-        <div className="result-items">{count}차 결과 ...</div> */}
-      </div>
-    </div >
-  );
+        <div className="select-container">
+          <div className="select-left-container">
+            <div className="select-box">
+              <div>두번째 객체를 선택해주세요</div>
+              <select
+                value={secondObj}
+                defaultValue="default"
+                onChange={(e) => handleChange(e, SECOND_OBJ)}
+                ref={selectSecondRef}
+                name="object"
+              >
+                <option value="default" disabled>객체선택</option>
+                {
+                  objList.map((item, index) =>
+                    <option key={index} value={item}>{item}</option>
+                  )
+                }
+              </select>
+            </div>
+            <div className="select-box">
+              <div onClick={() => handleTest()} className="btn-test-container">{count} 차 객체 인식 실험</div>
+              <div onClick={handleSave} className="btn-test-container color-dark">모델 저장</div>
+            </div>
+          </div>
+          <div className="select-right-container">
+            <div className="image-container">
+              {
+                secondObj !== null && secondObjImgs.map((image, index) =>
+                  (index >= IMAGE_COUNT * (count - 1) && index <= IMAGE_COUNT * count) ?
+                    <div key={`${image}-${index}`} className="image-item">
+                      <img className="image-item-img" src={image} alt='' />
+                    </div>
+                    : null
+                )
+              }
+            </div>
+          </div>
+        </div>
+        <div className="result-container">
+          {/* <ResultChart /> */}
+        </div>
+      </div >
+    </>
+  )
 }
 
 export default App;
