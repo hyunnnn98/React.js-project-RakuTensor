@@ -4,7 +4,7 @@ import ReactLoading from 'react-loading';
 import axios from 'axios'
 
 // components
-// import ResultChart from './components/ResultChart'
+import ResultChart from './components/ResultChart'
 
 // const
 import { SERVER_URL, IMAGE_COUNT, FIRST_OBJ, SECOND_OBJ, THIRD_OBJ } from './utils/const'
@@ -21,6 +21,7 @@ const App = () => {
 
   // 서버로부터 객체 리스트 저장
   const [objList, setObjList] = useState([])
+  const [resultArr, setResultArr] = useState([0])
 
   // 이미지 주소 저장
   const [firstObjImgs, setFirstObjImgs] = useState([])
@@ -69,8 +70,8 @@ const App = () => {
           'objects': [firstObj, secondObj, thirdObj],
           count
         });
-        console.log('2회차 신뢰치?', data);
-        // setObjList(data.list)
+        console.log(`${count - 1}회차 신뢰치?`, data.result);
+        setResultArr([...resultArr, data.result])
       } catch (e) {
         alert("서버로부터 데이터를 받아올 수 없습니다.")
         handleInit();
@@ -100,8 +101,8 @@ const App = () => {
       return alert('객체를 선택해주세요.')
     }
 
-    if (count > 85) {
-      return alert('객체 인식 실험은 최대 85번까지 가능합니다.')
+    if (count > 10) {
+      return alert('객체 인식 실험은 최대 10번까지 가능합니다.')
     }
 
     // 카운트 증가
@@ -172,6 +173,7 @@ const App = () => {
     selectThirdRef.current.value = 'default'
     // 카운팅 초기화
     setCount(Number(1))
+    setResultArr([0])
   }
 
   return (
@@ -205,6 +207,7 @@ const App = () => {
               </select>
             </div>
             <div className="select-box">
+              <div onClick={() => handleTest()} className="btn-test-container">{count} 차 객체 인식 실험</div>
               <div onClick={handleInit} className="btn-test-container color-blue">객체 초기화</div>
             </div>
           </div>
@@ -231,7 +234,10 @@ const App = () => {
             <span className="obj-title">{thirdObj}</span>
           </div>
           <div>
-            차트가 들어갈 공간
+            <div style={{ marginBottom: 20, textAlign: 'center' }}>
+              결과
+            </div>
+            <ResultChart resultArr={resultArr} />
           </div>
         </div>
         <div className="select-container">
@@ -254,7 +260,6 @@ const App = () => {
               </select>
             </div>
             <div className="select-box">
-              <div onClick={() => handleTest()} className="btn-test-container">{count} 차 객체 인식 실험</div>
               <div onClick={handleSave} className="btn-test-container color-dark">모델 저장</div>
             </div>
           </div>

@@ -17,22 +17,16 @@ const options = {
 }
 
 
-const ResultChart = ({ rankArr }) => {
-
-    let calculatedArr = [0, 0, 0, 0, 0, 0, 0, 0]
-    rankArr.forEach(item => calculatedArr[item - 1]++)
-    let rankColor = ["#11b288", "#207ac7", "#207ac7", "#207ac7", "#d6d6d6", "#d6d6d6", "#d6d6d6", "#d6d6d6"]
+const ResultChart = ({ resultArr }) => {
 
     const data = {
-        labels: ['#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8'],
+        labels: ['0차', '1차', '2차', '3차', '4차', '5차', '6차', '7차', '8차', '9차', '10차'],
         datasets: [
             {
-                backgroundColor: rankColor,
-                borderColor: rankColor,
-                borderWidth: 1,
-                hoverBackgroundColor: rankColor,
-                hoverBorderColor: rankColor,
-                data: calculatedArr
+                backgroundColor: '#b54dfa96',
+                borderColor: '#d6d6d6',
+                borderWidth: 2,
+                data: resultArr
             }
         ]
     };
@@ -40,7 +34,7 @@ const ResultChart = ({ rankArr }) => {
     return (
         <Line
             data={data}
-            width={300}
+            width={400}
             height={200}
             options={options}
         />
