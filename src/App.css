@@ -125,6 +125,10 @@ color: #0fff73;
   color: #fa5ce5;
 }
 
+.obj-title:nth-child(2) {
+  color: #6372fd;
+}
+
 .loading-container {
   display: flex;
   flex-direction: column;
